@@ -33,7 +33,7 @@ def attach_volume_to_host(volume_id):
     connector_properties = {
         'target_portals': ['{0}:3260'.format(config.ip)],
         'target_iqns': ['iqn.2011-04.com.zadara:vsa-00000006:CD2295A547E046A98FAFA18AF1BBCB8D:1'],
-        'target_luns': [2],
+        'target_luns': [0],
     }
     connection = connector.connect_volume(connector_properties)
     print(connection)
