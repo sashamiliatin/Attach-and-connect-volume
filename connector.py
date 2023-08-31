@@ -25,7 +25,7 @@ def get_connector_cls() -> os_brick.initiator.connectors.iscsi.ISCSIConnector:
 
 
 def nsenter_execute(*cmd, **kwargs):
-    kwargs.pop('run_as_root', False)
+    kwargs.pop('run_as_root', True)
     kwargs.pop('root_helper', None)
     cmd = ['nsenter', f'--mount={NSENTER_NAMESPACE}/mnt', f'--ipc={NSENTER_NAMESPACE}/ipc', '--'] + list(cmd)
     return rootwrap.custom_execute(*cmd, **kwargs)
