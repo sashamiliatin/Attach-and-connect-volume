@@ -77,6 +77,6 @@ def create_from_url(url=None):
 
 
 if __name__ == '__main__':
-    lockutils.set_defaults(lock_path='/home/user/tmp/')
+    lockutils.set_defaults(lock_path='/home/fedora/tmp/')
     url = 'http://logstack.dc1.strato:8001/bitnami-tomcatstack-8.5.28-0-linux-debian-9-x86_64-disk1.qcow2'
     create_from_url(url)
