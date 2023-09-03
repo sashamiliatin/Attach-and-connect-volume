@@ -11,6 +11,8 @@ import os
 import mmap
 import datastreams
 import logging
+import subprocess
+
 
 connector_properties = {
     'target_portals': ['{0}:3260'.format(config.ip)],
@@ -26,6 +28,7 @@ def get_size_of_file(url):
     size = res.headers.get('Content-Length')
     return int(math.ceil(float(size) / (2 ** 30)))
 
+
 def handle_data(read_stream, write_stream):
     data_length = 0
     m = mmap.mmap(-1, CHUNKSIZE_BYTES)
@@ -38,6 +41,7 @@ def handle_data(read_stream, write_stream):
         m.write(chunk)
         write_stream.write(m)
     return data_length
+
 
 def create_volume(name, size):
     vpsa_session = session.Session(host=config.host, key=config.token)
@@ -64,11 +68,16 @@ def mount(device):
 def upload_file(path, url):
     res = requests.head(url=url, verify=False)
     data_stream = res.raw
-    f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
+    try:
+        f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
+    except:
+        subprocess.call(['sudo', 'blockdev', '--setro', path])
+        f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
     try:
         data = handle_data(data_stream, datastreams.DataStream(f))
     except:
         logging.getLogger(__name__).exception('Failed to write to device: %s', path)
+        raise
     return data
 
 
