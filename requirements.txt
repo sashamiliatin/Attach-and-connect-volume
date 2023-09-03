@@ -1,3 +1,4 @@
 os-brick==5.2.2
 requests~=2.31.0
 zadarapy~=0.77
+gevent

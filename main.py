@@ -7,6 +7,17 @@ import zadarapy.vpsa.servers as servers
 import config
 import connector
 from oslo_concurrency import lockutils
+import os
+import mmap
+import datastreams
+import logging
+
+connector_properties = {
+    'target_portals': ['{0}:3260'.format(config.ip)],
+    'target_iqns': ['iqn.2011-04.com.zadara:vsa-00000006:CD2295A547E046A98FAFA18AF1BBCB8D:1'],
+    'target_luns': [0],
+}
+CHUNKSIZE_BYTES = 4000000
 
 
 def get_size_of_file(url):
@@ -15,6 +26,18 @@ def get_size_of_file(url):
     size = res.headers.get('Content-Length')
     return int(math.ceil(float(size) / (2 ** 30)))
 
+def handle_data(read_stream, write_stream):
+    data_length = 0
+    m = mmap.mmap(-1, CHUNKSIZE_BYTES)
+    while True:
+        chunk = read_stream.read(CHUNKSIZE_BYTES)
+        if not chunk:
+            break
+        data_length += len(chunk)
+        m.seek(0)
+        m.write(chunk)
+        write_stream.write(m)
+    return data_length
 
 def create_volume(name, size):
     vpsa_session = session.Session(host=config.host, key=config.token)
@@ -30,13 +53,6 @@ def attach_volume_to_host(volume_id):
         server = server_list['response']['servers'][0]['name']
         res = servers.attach_servers_to_volume(session=vpsa_session, volume_id=volume_id, servers=server)
         print(res)
-    connector_properties = {
-        'target_portals': ['{0}:3260'.format(config.ip)],
-        'target_iqns': ['iqn.2011-04.com.zadara:vsa-00000006:CD2295A547E046A98FAFA18AF1BBCB8D:1'],
-        'target_luns': [0],
-    }
-    connection = connector.connect_volume(connector_properties)
-    print(connection)
     return server
 
 
@@ -46,7 +62,14 @@ def mount(device):
 
 
 def upload_file(path, url):
-    pass
+    res = requests.head(url=url, verify=False)
+    data_stream = res.raw
+    f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
+    try:
+        data = handle_data(data_stream, datastreams.DataStream(f))
+    except:
+        logging.getLogger(__name__).exception('Failed to write to device: %s', path)
+    return data
 
 
 def umaunt(path):
@@ -64,14 +87,20 @@ def transform(volume_id):
     return snapshot_id
 
 
+def connect_volume():
+    connection = connector.connect_volume(connector_properties)
+    print(connection)
+    return connection
+
+
 def create_from_url(url=None):
     size = get_size_of_file(url=url)
     # volume_id = create_volume(name='temp_volume', size=size)
     volume_id = 'volume-00007110'
     device = attach_volume_to_host(volume_id=volume_id)
-    path = mount(device=device)
-    upload_file(path=path, url=url)
-    umaunt(path=path)
+    connection_info = connect_volume()
+    upload_file(path=connection_info['path'], url=url)
+    umaunt(path=connection_info['path'])
     # detach_from_host(volume_id=volume_id, host=device)
     return transform(volume_id=volume_id)
 
