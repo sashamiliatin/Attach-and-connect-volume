@@ -72,7 +72,7 @@ def create_from_url(url=None):
     path = mount(device=device)
     upload_file(path=path, url=url)
     umaunt(path=path)
-    detach_from_host(volume_id=volume_id, host=device)
+    # detach_from_host(volume_id=volume_id, host=device)
     return transform(volume_id=volume_id)
 
 
