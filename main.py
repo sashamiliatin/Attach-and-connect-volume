@@ -70,7 +70,7 @@ def upload_file(path, url):
     data_stream = res.raw
     print(os.stat(path).st_mode)
     # try:
-    f = os.open("sudo", os.O_DIRECT | os.O_SYNC | os.O_WRONLY, path)
+    f = os.open(path=path, mode=os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
     # except:
     #     subprocess.call(['sudo', 'blockdev', '--setro', path])
     #     f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
