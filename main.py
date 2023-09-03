@@ -68,6 +68,7 @@ def mount(device):
 def upload_file(path, url):
     res = requests.head(url=url, verify=False)
     data_stream = res.raw
+    print(os.stat(path).st_mode)
     # try:
     f = os.popen("sudo", path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
     # except:
