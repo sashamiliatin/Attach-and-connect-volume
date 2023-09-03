@@ -68,11 +68,11 @@ def mount(device):
 def upload_file(path, url):
     res = requests.head(url=url, verify=False)
     data_stream = res.raw
-    try:
-        f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
-    except:
-        subprocess.call(['sudo', 'blockdev', '--setro', path])
-        f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
+    # try:
+    f = os.popen("sudo", path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
+    # except:
+    #     subprocess.call(['sudo', 'blockdev', '--setro', path])
+    #     f = os.open(path, os.O_DIRECT | os.O_SYNC | os.O_WRONLY)
     try:
         data = handle_data(data_stream, datastreams.DataStream(f))
     except:
